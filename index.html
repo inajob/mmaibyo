@@ -1,0 +1,46 @@
+<html>
+  <head>
+    <script src="js/socket.io.js"></script>
+    <script>
+      <!--
+      function $(id){
+        return document.getElementById(id);
+      }
+      function $c(name){
+        return document.createElement(name)
+      }
+      function $t(text){
+        return document.createTextNode(text);
+      }
+      
+      function update(url){
+        console.log(url);
+        var debug = $("debug");
+        var piece = $c("div");
+        piece.appendChild($t(url.title));
+        debug.insertBefore(piece, debug.firstChild);
+      }
+
+      var socket = io.connect('http://nodejs-maibyo.rhcloud.com:8000');
+      socket.on('message', function(t) {
+        //console.log('onmessage',t);
+        if(t.type && t.type=="init"){
+          // initialize
+          var urls = t.urls;
+          for(var i = 0; i < Math.min(10,urls.length); i++){
+            update(urls[i])
+          }
+        }else{
+          //console.log(t);
+          update(t);
+        }
+      });
+
+      -->
+    </script>
+  </head>
+  <body>
+    <h1>maibyo</h1>
+    <div id="debug"></div>
+  </body>
+</html>
