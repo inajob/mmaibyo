@@ -1,18 +1,103 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta charset="UTF-8">
+    <title>毎秒新聞モバイル</title>
+    <meta property="og:title" content="毎秒新聞モバイル">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="今話題になってるTweetを垂れ流しています">
+    <meta property="og:url" content="http://inajob.dip.jp/mmaibyo/">
+    <meta property="og:image" content="http://inajob.dip.jp/maibyo/maibyo.png">
+
+
     <script src="js/socket.io.js"></script>
     <style>
       *{
         padding:0px;
         margin:0px;
       }
+      body{
+        background-color:#ddf;
+      }
+      .header{
+        background-color:#006;
+        color:#ddf;
+        padding:5px;
+      }
+      h1{
+        font-size:1em;
+        margin-right:1em;
+      }
+      .lfloat{
+        float:left;
+      }
+      .box{
+        padding:3px;
+        margin:1px;
+        border:solid 1px #ddf;
+        font-size:0.2em;
+      }
+      .text{
+        background-color:#eef;
+      }
+      .loading{
+        width:100%;
+        height:300px;
+        line-height:300px;
+        text-align:center;
+        font-size:3em;
+        animation: spin 1.5s linear infinite;
+        -webkit-animation: spin 1.5s linear infinite;
+      }
+      @keyframes spin {
+        0% {transform: rotate(0deg);}
+        100% {transform: rotate(360deg);}
+      }
+      @-webkit-keyframes spin {
+        0% {-webkit-transform: rotate(0deg);}
+        100% {-webkit-transform: rotate(360deg);}
+      }
+
+      .piece div{
+        margin:10px;
+      }
       div{
       }
       div img{
         width:100%;
+        max-width:400px;
         height:auto;
       }
+      .half{
+        width:49%;
+      }
+      .controls{
+        position:fixed;
+        bottom:10px;
+        width:100%;
+        height:60px;
+      }
+      .button{
+        text-align:center;
+        line-height:60px;
+        background-color:#dff;
+        border:solid 1px;
+      }
+
+      .cf:before,
+      .cf:after {
+        content: " ";
+        display: table;
+      }
+
+      .cf:after {
+        clear: both;
+      }
+
+      .cf {
+        *zoom: 1;
+      }
+
     </style>
     <script>
       <!--
@@ -30,34 +115,48 @@
       
       function update(url){
         //console.log(url);
-        if(url.media.length > 0){
+        if(url.media.length > 0 && url.isMedia){
           var piece = $c("div");
+          piece.className = "piece";
           var img = $c("img");
           img.src = url.media[0]
           img.onload = function(){
             var tdiv = $c('div');
+            tdiv.className = 'text';
             tdiv.appendChild($t(url.title))
             piece.appendChild(tdiv);
             var idiv = $c('div')
             idiv.appendChild(img);
             piece.appendChild($c('div').appendChild(img));
+            piece.setAttribute('data-url',url.url);
             queue.push(piece);
           };
         }
       }
       setInterval(function(){
+        updateClock();
         var debug = $("debug");
         var p = queue.shift();
         if(p){
           debug.innerHTML = "";
+          p.addEventListener('touchstart', function(){
+            var url = p.getAttribute('data-url');
+            var m = url.match(/status\/([0-9]+)/);
+            if(m){
+              var status = m[1];
+              document.location.href = 'twitter://status?id=' + status;
+            }
+          });
           debug.appendChild(p);
         }
-      },500);
+        $("count").innerHTML = queue.length
+      },1000);
 
       var socket = io.connect('http://nodejs-maibyo.rhcloud.com:8000');
       socket.on('message', function(t) {
         //console.log('onmessage',t);
         if(t.type && t.type=="init"){
+          $("status").innerHTML = 'connecting';
           // initialize
           var urls = t.urls;
           for(var i = 0; i < Math.min(10,urls.length); i++){
@@ -67,13 +166,34 @@
           //console.log(t);
           update(t);
         }
+
       });
+      function updateClock(){
+        var d = new Date();
+        var h = ('0' + d.getHours()).slice(-2);
+        var m = ('0' + d.getMinutes()).slice(-2);
+        var s = ('0' + d.getSeconds()).slice(-2);
+        var c = h + ':' + m + ':' + s;
+        $('clock').innerHTML = c;
+      }
 
       -->
     </script>
   </head>
   <body>
-    <h1>maibyo</h1>
-    <div id="debug"></div>
+    <div class="header cf">
+      <h1 class="lfloat">毎秒新聞モバイル</h1>
+      <div class="lfloat box" id="count"></div>
+      <div class="lfloat box" id="status"></div>
+      <div class="lfloat box" id="clock"></div>
+      <a href="https://twitter.com/share" class="twitter-share-button" data-lang="ja" data-count="none">ツイート</a>
+      <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+    </div>
+    <div id="debug"><div class="loading">接続中</div></div>
+    <div class="controls cf">
+    </div>
+    <script>
+      $("status").innerHTML = 'connecting server...';
+    </script>
   </body>
 </html>
